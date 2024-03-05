@@ -1,0 +1,22 @@
+cc_binary {
+    name: "xu",
+
+    cflags: [
+        "-Wall",
+    ],
+
+    srcs: ["su.c", "daemon.c", "pts.c"],
+    shared_libs: [
+        "libbase",
+        "libcutils",
+        "libutils",
+        "liblog",
+    ],
+    required: ["su.rc"],
+}
+
+prebuilt_etc {
+    name: "su.rc",
+    sub_dir: "init",
+    src: "su.rc",
+}
