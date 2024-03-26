@@ -550,6 +550,7 @@ int su_main(int argc, char *argv[], int need_client) {
         { "preserve-environment",    no_argument,        NULL, 'p' },
         { "shell",            required_argument,    NULL, 's' },
         { "version",            no_argument,        NULL, 'v' },
+        { "mount-master",            no_argument,        NULL, 'm' },
         { NULL, 0, NULL, 0 },
     };
 
@@ -566,6 +567,7 @@ int su_main(int argc, char *argv[], int need_client) {
             ctx.to.login = 1;
             break;
         case 'm':
+            break;
         case 'p':
             ctx.to.keepenv = 1;
             break;
